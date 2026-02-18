@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyBridge - App Transfert</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-container {
+            width: 375px;
+            height: 750px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .screen {
+            display: none;
+            height: calc(100% - 44px);
+            background: #f8f9fa;
+            overflow-y: auto;
+        }
+
+        .screen.active { display: block; }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+            color: white;
+        }
+
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+
+        .balance-card {
+            background: white;
+            margin: -30px 20px 20px;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .balance-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+        .balance-amount { font-size: 36px; font-weight: bold; color: #333; margin-bottom: 15px; }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:hover { transform: translateY(-2px); }
+
+        .content { padding: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #333; }
+
+        .transaction-list { background: white; border-radius: 15px; overflow: hidden; }
+
+        .transaction-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction-item:last-child { border-bottom: none; }
+
+        .transaction-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        .transaction-icon.receive { background: #e8f5e9; }
+        .transaction-icon.send { background: #fff3e0; }
+        .transaction-details { flex: 1; }
+        .transaction-title { font-weight: 600; color: #333; margin-bottom: 3px; }
+        .transaction-date { font-size: 13px; color: #999; }
+        .transaction-amount { font-weight: 600; font-size: 16px; }
+        .transaction-amount.positive { color: #4caf50; }
+        .transaction-amount.negative { color: #ff9800; }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus { outline: none; border-color: #667eea; }
+
+        .payment-method {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-method:hover { border-color: #667eea; background: #f8f9ff; }
+        .payment-method.selected { border-color: #667eea; background: #f8f9ff; }
+
+        .payment-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .payment-info h3 { font-size: 16px; margin-bottom: 3px; color: #333; }
+        .payment-info p { font-size: 13px; color: #999; }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .exchange-rate {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .exchange-rate-text { color: #f57c00; font-size: 14px; margin-bottom: 5px; }
+        .exchange-rate-value { font-size: 18px; font-weight: 600; color: #e65100; }
+
+        .summary-box { background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .summary-row:last-child { border-bottom: none; font-weight: 600; font-size: 18px; color: #667eea; }
+        .summary-label { color: #666; }
+        .summary-value { color: #333; font-weight: 500; }
+
+        .success-animation { text-align: center; padding: 40px 20px; }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: #4caf50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 50px;
+            color: white;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .success-title { font-size: 24px; font-weight: 600; color: #333; margin-bottom: 10px; }
+        .success-message { color: #666; margin-bottom: 30px; }
+        .transaction-id { background: #f0f0f0; padding: 10px; border-radius: 8px; font-size: 12px; color: #666; margin-bottom: 20px; }
+
+        .back-btn { background: transparent; border: none; color: white; font-size: 24px; cursor: pointer; padding: 5px; }
+
+        .progress-bar { height: 4px; background: #e0e0e0; border-radius: 2px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: width 0.5s ease; }
+
+        .step-indicator { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 0 10px; }
+        .step { text-align: center; flex: 1; }
+        .step-circle { width: 30px; height: 30px; border-radius: 50%; background: #e0e0e0; color: #999; display: flex; align-items: center; justify-content: center; margin: 0 auto 5px; font-weight: 600; font-size: 14px; }
+        .step.active .step-circle { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .step.completed .step-circle { background: #4caf50; color: white; }
+        .step-label { font-size: 11px; color: #999; }
+        .step.active .step-label { color: #667eea; font-weight: 600; }
+
+        .bank-account-card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 2px solid #e0e0e0; }
+        .bank-name { font-weight: 600; color: #333; margin-bottom: 10px; font-size: 16px; }
+        .account-details { font-size: 14px; color: #666; line-height: 1.8; }
+        .iban-display { background: #f8f9fa; padding: 10px; border-radius: 8px; font-family: monospace; margin-top: 10px; }
+
+        /* Login screen */
+        .login-container { padding: 40px 25px; }
+        .login-logo { text-align: center; margin-bottom: 30px; font-size: 48px; }
+        .login-title { text-align: center; font-size: 24px; font-weight: 700; color: #333; margin-bottom: 8px; }
+        .login-subtitle { text-align: center; color: #999; font-size: 14px; margin-bottom: 30px; }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+        .alert.error { background: #ffebee; color: #c62828; display: block; }
+        .alert.success { background: #e8f5e9; color: #2e7d32; display: block; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        .empty-state { text-align: center; padding: 30px; color: #999; }
+        .empty-state-icon { font-size: 40px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="status-bar">
+            <span id="clock">9:41</span>
+            <span>📶 🔋</span>
+        </div>
+
+        <!-- Écran Login -->
+        <div class="screen active" id="login-screen">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 200px; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white;">
+                <div style="font-size: 50px;">💸</div>
+                <h1 style="font-size: 28px; font-weight: 700; margin-top: 10px;">MoneyBridge</h1>
+                <p style="opacity: 0.9; font-size: 14px;">Afrique ↔ Europe</p>
+            </div>
+            <div class="login-container">
+                <div id="login-alert" class="alert"></div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="login-email" placeholder="votre@email.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-input" id="login-password" placeholder="••••••••">
+                </div>
+                <button class="btn-primary" id="login-btn" onclick="doLogin()" style="margin-top: 10px;">
+                    Se connecter
+                </button>
+            </div>
+        </div>
+
+        <!-- Écran d'accueil -->
+        <div class="screen" id="home-screen">
+            <div class="header">
+                <h1 id="welcome-name">Bonjour 👋</h1>
+                <p>Gérez vos transferts facilement</p>
+            </div>
+            <div class="content">
+                <div class="balance-card">
+                    <div class="balance-label">Solde disponible</div>
+                    <div class="balance-amount" id="wallet-balance">Chargement...</div>
+                    <div class="quick-actions">
+                        <button class="action-btn" onclick="goToScreen('receive-screen')">📥 Recevoir</button>
+                        <button class="action-btn" onclick="goToScreen('send-screen')">📤 Envoyer</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="section-title" style="margin-bottom: 0;">Transactions récentes</div>
+                        <button onclick="logout()" style="background: none; border: none; color: #667eea; font-size: 13px; cursor: pointer;">Déconnexion</button>
+                    </div>
+                    <div class="transaction-list" id="transactions-list">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">⏳</div>
+                            <p>Chargement...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Écran recevoir -->
+        <div class="screen" id="receive-screen">
+            <div class="header">
+                <button class="back-btn" onclick="goToScreen('home-screen')">←</button>
+                <h1 style="margin-top: 10px;">Recevoir de l'argent</h1>
+                <p>Depuis l'Afrique vers votre compte</p>
+            </div>
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step active"><div class="step-circle">1</div><div class="step-label">Source</div></div>
+                    <div class="step"><div class="step-circle">2</div><div class="step-label">Montant</div></div>
+                    <div class="step"><div class="step-circle">3</div><div class="step-label">Confirmation</div></div>
+                </div>
+
+                <div class="section-title">Choisissez votre méthode</div>
+
+                <div class="payment-method selected" onclick="selectPaymentMethod(this)" data-method="wave">
+                    <div class="payment-icon">💳</div>
+                    <div class="payment-info"><h3>Wave</h3><p>Instantané • Sénégal, Mali, Côte d'Ivoire</p></div>
+                </div>
+                <div class="payment-method" onclick="selectPaymentMethod(this)" data-method="orange_money">
+                    <div class="payment-icon">📱</div>
+                    <div class="payment-info"><h3>Orange Money</h3><p>2-3 min • Disponible dans 18 pays</p></div>
+                </div>
+                <div class="payment-method" onclick="selectPaymentMethod(this)" data-method="mtn">
+                    <div class="payment-icon">🌍</div>
+                    <div class="payment-info"><h3>MTN Mobile Money</h3><p>2-3 min • Ghana, Cameroun, Nigeria...</p></div>
+                </div>
+
+                <button class="btn-primary" onclick="goToScreen('amount-screen')">Continuer</button>
+            </div>
+        </div>
+
+        <!-- Écran montant -->
+        <div class="screen" id="amount-screen">
+            <div class="header">
+                <button class="back-btn" onclick="goToScreen('receive-screen')">←</button>
+                <h1 style="margin-top: 10px;">Montant à recevoir</h1>
+            </div>
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed"><div class="step-circle">✓</div><div class="step-label">Source</div></div>
+                    <div class="step active"><div class="step-circle">2</div><div class="step-label">Montant</div></div>
+                    <div class="step"><div class="step-circle">3</div><div class="step-label">Confirmation</div></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Vous recevez (XOF)</label>
+                    <input type="number" class="form-input" id="amount-xof" value="50000" oninput="calculateExchange()">
+                </div>
+
+                <div class="exchange-rate">
+                    <div class="exchange-rate-text">Taux de change</div>
+                    <div class="exchange-rate-value">1 EUR = 655.96 XOF</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Vous recevrez (EUR)</label>
+                    <input type="text" class="form-input" id="amount-eur" value="76.20" readonly>
+                </div>
+
+                <div class="summary-box">
+                    <div class="summary-row">
+                        <span class="summary-label">Montant envoyé</span>
+                        <span class="summary-value" id="summary-xof">50,000 XOF</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Frais</span>
+                        <span class="summary-value">0 XOF</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Total à recevoir</span>
+                        <span class="summary-value" id="summary-eur">€76.20</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="createReceiveTransaction()">Générer le QR Code</button>
+            </div>
+        </div>
+
+        <!-- Écran confirmation QR -->
+        <div class="screen" id="confirmation-screen">
+            <div class="header">
+                <button class="back-btn" onclick="goToScreen('amount-screen')">←</button>
+                <h1 style="margin-top: 10px;">Payer avec Wave</h1>
+                <p>Scannez ce QR code</p>
+            </div>
+            <div class="content">
+                <div class="step-indicator">
+                    <div class="step completed"><div class="step-circle">✓</div><div class="step-label">Source</div></div>
+                    <div class="step completed"><div class="step-circle">✓</div><div class="step-label">Montant</div></div>
+                    <div class="step active"><div class="step-circle">3</div><div class="step-label">Confirmation</div></div>
+                </div>
+
+                <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 180px; line-height: 1;">⬛</div>
+                    <p style="margin-top: 15px; color: #666; font-size: 14px;">QR Code de paiement</p>
+                    <p style="margin-top: 5px; color: #999; font-size: 12px;" id="qr-ref">Référence: —</p>
+                </div>
+
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <p style="color: #1976d2; font-size: 14px; text-align: center;">
+                        <strong>📱 Instructions:</strong><br>
+                        Ouvrez Wave → Scanner → Pointez sur ce QR code
+                    </p>
+                </div>
+
+                <button class="btn-primary" onclick="goToScreen('processing-screen'); simulateProgress()">✓ J'ai payé</button>
+            </div>
+        </div>
+
+        <!-- Écran traitement -->
+        <div class="screen" id="processing-screen">
+            <div class="header">
+                <h1>Traitement en cours</h1>
+                <p>Vérification du paiement</p>
+            </div>
+            <div class="content" style="padding-top: 60px; text-align: center;">
+                <div style="font-size: 80px; margin-bottom: 20px; animation: pulse 1.5s infinite;">⏳</div>
+                <h2 style="color: #333; margin-bottom: 10px;">Patientez...</h2>
+                <p style="color: #666; margin-bottom: 30px;">Nous vérifions votre paiement</p>
+                <div class="progress-bar"><div class="progress-fill" id="progress" style="width: 0%;"></div></div>
+            </div>
+        </div>
+
+        <!-- Écran succès réception -->
+        <div class="screen" id="success-screen">
+            <div class="header">
+                <h1>Transaction réussie !</h1>
+                <p>L'argent est sur votre compte</p>
+            </div>
+            <div class="content">
+                <div class="success-animation">
+                    <div class="success-icon">✓</div>
+                    <div class="success-title" id="success-amount">€76.20 reçus !</div>
+                    <div class="success-message">Votre paiement a été traité avec succès</div>
+                    <div class="transaction-id" id="success-ref">ID: —</div>
+                </div>
+                <button class="btn-primary" onclick="refreshAndGoHome()">Retour à l'accueil</button>
+            </div>
+        </div>
+
+        <!-- Écran envoi bancaire -->
+        <div class="screen" id="send-screen">
+            <div class="header">
+                <button class="back-btn" onclick="goToScreen('home-screen')">←</button>
+                <h1 style="margin-top: 10px;">Virement bancaire</h1>
+                <p>Transfert SEPA</p>
+            </div>
+            <div class="content">
+                <div class="balance-card" style="margin: 0 0 20px 0;">
+                    <div class="balance-label">Solde disponible</div>
+                    <div class="balance-amount" id="send-balance">—</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">IBAN du bénéficiaire</label>
+                    <input type="text" class="form-input" id="iban-input" placeholder="FR76 3000 4000 0100...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Montant à transférer (EUR)</label>
+                    <input type="number" class="form-input" id="transfer-amount" value="100.00" step="0.01">
+                </div>
+
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <p style="color: #2e7d32; font-size: 14px; text-align: center;">
+                        <strong>⚡ Virement instantané</strong><br>
+                        L'argent arrivera en quelques secondes
+                    </p>
+                </div>
+
+                <button class="btn-primary" onclick="createSendTransaction()">Confirmer le virement</button>
+            </div>
+        </div>
+
+        <!-- Écran traitement virement -->
+        <div class="screen" id="bank-processing-screen">
+            <div class="header">
+                <h1>Virement en cours</h1>
+                <p>Transfert SEPA</p>
+            </div>
+            <div class="content" style="padding-top: 60px; text-align: center;">
+                <div style="font-size: 80px; margin-bottom: 20px; animation: pulse 1.5s infinite;">💳</div>
+                <h2 style="color: #333; margin-bottom: 10px;">Traitement...</h2>
+                <p style="color: #666; margin-bottom: 30px;">Votre virement SEPA est en cours</p>
+                <div class="progress-bar"><div class="progress-fill" id="bank-progress" style="width: 0%;"></div></div>
+            </div>
+        </div>
+
+        <!-- Écran succès virement -->
+        <div class="screen" id="bank-success-screen">
+            <div class="header">
+                <h1>Virement réussi !</h1>
+                <p>L'argent est sur votre compte bancaire</p>
+            </div>
+            <div class="content">
+                <div class="success-animation">
+                    <div class="success-icon">✓</div>
+                    <div class="success-title" id="bank-success-amount">€100.00 transférés !</div>
+                    <div class="success-message">Virement SEPA effectué avec succès</div>
+                    <div class="transaction-id" id="bank-success-ref">ID: —</div>
+                </div>
+                <button class="btn-primary" onclick="refreshAndGoHome()">Retour à l'accueil</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // CONFIGURATION
+        // =============================================
+        const API_BASE = 'http://127.0.0.1:8000/api';
+        let authToken = localStorage.getItem('mb_token') || null;
+        let currentUser = null;
+        let selectedPaymentMethod = 'wave';
+        let currentTransactionId = null;
+
+        // =============================================
+        // UTILITAIRES
+        // =============================================
+        function goToScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent =
+                now.getHours().toString().padStart(2, '0') + ':' +
+                now.getMinutes().toString().padStart(2, '0');
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+            const options = { method, headers };
+            if (body) options.body = JSON.stringify(body);
+            const response = await fetch(`${API_BASE}${endpoint}`, options);
+            const data = await response.json();
+            if (!response.ok) throw { status: response.status, data };
+            return data;
+        }
+
+        // =============================================
+        // AUTHENTIFICATION
+        // =============================================
+        async function doLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+            const alert = document.getElementById('login-alert');
+
+            if (!email || !password) {
+                alert.className = 'alert error';
+                alert.textContent = 'Veuillez remplir tous les champs.';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>Connexion...';
+            alert.className = 'alert';
+
+            try {
+                const data = await apiCall('/accounts/login/', 'POST', { email, password });
+                authToken = data.access;
+                localStorage.setItem('mb_token', authToken);
+                currentUser = data.user;
+                await loadHomeScreen();
+                goToScreen('home-screen');
+            } catch (err) {
+                alert.className = 'alert error';
+                alert.textContent = err.data?.error || 'Identifiants incorrects.';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Se connecter';
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            localStorage.removeItem('mb_token');
+            currentUser = null;
+            goToScreen('login-screen');
+        }
+
+        // =============================================
+        // ÉCRAN ACCUEIL
+        // =============================================
+        async function loadHomeScreen() {
+            // Nom utilisateur
+            if (currentUser) {
+                document.getElementById('welcome-name').textContent =
+                    `Bonjour, ${currentUser.name || currentUser.email} 👋`;
+            }
+
+            // Solde wallet
+            try {
+                const wallet = await apiCall('/wallets/my-wallet/');
+                const balance = parseFloat(wallet.balance).toFixed(2);
+                document.getElementById('wallet-balance').textContent = `€${balance}`;
+                document.getElementById('send-balance').textContent = `€${balance}`;
+            } catch (e) {
+                document.getElementById('wallet-balance').textContent = '€0.00';
+            }
+
+            // Transactions
+            try {
+                const transactions = await apiCall('/transactions/');
+                renderTransactions(transactions);
+            } catch (e) {
+                document.getElementById('transactions-list').innerHTML =
+                    '<div class="empty-state"><div class="empty-state-icon">📭</div><p>Aucune transaction</p></div>';
+            }
+        }
+
+        function renderTransactions(transactions) {
+            const list = document.getElementById('transactions-list');
+            if (!transactions || transactions.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>Aucune transaction pour l\'instant</p></div>';
+                return;
+            }
+
+            list.innerHTML = transactions.map(t => {
+                const isReceive = t.type === 'receive' || t.type === 'mobile_money';
+                const icon = isReceive ? '📥' : '📤';
+                const iconClass = isReceive ? 'receive' : 'send';
+                const amountClass = isReceive ? 'positive' : 'negative';
+                const prefix = isReceive ? '+' : '-';
+                const date = new Date(t.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <div class="transaction-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="transaction-icon ${iconClass}">${icon}</div>
+                            <div class="transaction-details">
+                                <div class="transaction-title">${t.type || 'Transaction'}</div>
+                                <div class="transaction-date">${date}</div>
+                            </div>
+                        </div>
+                        <div class="transaction-amount ${amountClass}">${prefix}€${parseFloat(t.amount).toFixed(2)}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        async function refreshAndGoHome() {
+            await loadHomeScreen();
+            goToScreen('home-screen');
+        }
+
+        // =============================================
+        // MÉTHODE DE PAIEMENT
+        // =============================================
+        function selectPaymentMethod(element) {
+            document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedPaymentMethod = element.dataset.method;
+        }
+
+        // =============================================
+        // CALCUL CHANGE
+        // =============================================
+        function calculateExchange() {
+            const xof = parseFloat(document.getElementById('amount-xof').value) || 0;
+            const rate = 655.96;
+            const eur = (xof / rate).toFixed(2);
+            document.getElementById('amount-eur').value = eur;
+            document.getElementById('summary-xof').textContent = xof.toLocaleString('fr-FR') + ' XOF';
+            document.getElementById('summary-eur').textContent = '€' + eur;
+        }
+
+        // =============================================
+        // CRÉER TRANSACTION RÉCEPTION
+        // =============================================
+        async function createReceiveTransaction() {
+            const xof = parseFloat(document.getElementById('amount-xof').value);
+            const eur = parseFloat(document.getElementById('amount-eur').value);
+
+            try {
+                const t = await apiCall('/transactions/create/', 'POST', {
+                    amount: eur,
+                    currency: 'EUR',
+                    type: 'mobile_money',
+                    source_amount: xof,
+                    source_currency: 'XOF',
+                    payment_method: selectedPaymentMethod
+                });
+                currentTransactionId = t.id;
+                document.getElementById('qr-ref').textContent = `Référence: MB-${t.id}`;
+                goToScreen('confirmation-screen');
+            } catch (e) {
+                alert('Erreur lors de la création de la transaction.');
+            }
+        }
+
+        // =============================================
+        // CRÉER TRANSACTION ENVOI
+        // =============================================
+        async function createSendTransaction() {
+            const amount = parseFloat(document.getElementById('transfer-amount').value);
+            const iban = document.getElementById('iban-input').value;
+
+            if (!iban) { alert('Veuillez entrer un IBAN.'); return; }
+            if (!amount || amount <= 0) { alert('Veuillez entrer un montant valide.'); return; }
+
+            try {
+                const t = await apiCall('/transactions/create/', 'POST', {
+                    amount: amount,
+                    currency: 'EUR',
+                    type: 'bank_transfer',
+                    iban: iban
+                });
+                currentTransactionId = t.id;
+                document.getElementById('bank-success-amount').textContent = `€${amount.toFixed(2)} transférés !`;
+                document.getElementById('bank-success-ref').textContent = `ID: MB-${t.id}`;
+                goToScreen('bank-processing-screen');
+                simulateBankProgress();
+            } catch (e) {
+                alert('Erreur lors du virement.');
+            }
+        }
+
+        // =============================================
+        // ANIMATIONS PROGRESS
+        // =============================================
+        function simulateProgress() {
+            let progress = 0;
+            const bar = document.getElementById('progress');
+            const interval = setInterval(() => {
+                progress += 10;
+                bar.style.width = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    const eur = document.getElementById('amount-eur').value;
+                    document.getElementById('success-amount').textContent = `€${eur} reçus !`;
+                    document.getElementById('success-ref').textContent = `ID: MB-${currentTransactionId || Date.now()}`;
+                    setTimeout(() => goToScreen('success-screen'), 500);
+                }
+            }, 300);
+        }
+
+        function simulateBankProgress() {
+            let progress = 0;
+            const bar = document.getElementById('bank-progress');
+            const interval = setInterval(() => {
+                progress += 15;
+                bar.style.width = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => goToScreen('bank-success-screen'), 500);
+                }
+            }, 200);
+        }
+
+        // =============================================
+        // AUTO-LOGIN si token existant
+        // =============================================
+        async function init() {
+            if (authToken) {
+                try {
+                    currentUser = await apiCall('/accounts/profile/');
+                    await loadHomeScreen();
+                    goToScreen('home-screen');
+                } catch (e) {
+                    authToken = null;
+                    localStorage.removeItem('mb_token');
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+web: gunicorn moneybridge.wsgi --log-file -
