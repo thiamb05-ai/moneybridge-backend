@@ -3,7 +3,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python manage.py migrate && gunicorn moneybridge.wsgi --bind 0.0.0.0:$PORT --log-file -",
+    "startCommand": "python manage.py collectstatic --noinput && python manage.py migrate && gunicorn moneybridge.wsgi --bind 0.0.0.0:$PORT --log-file -",
     "restartPolicyType": "ON_FAILURE"
   }
 }
