@@ -1,1 +1,1 @@
-web: gunicorn moneybridge.wsgi --bind 0.0.0.0:$PORT --log-file -
+web: python manage.py migrate && gunicorn moneybridge.wsgi --bind 0.0.0.0:$PORT --log-file -
