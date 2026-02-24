@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+content = '''from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -62,3 +62,8 @@ def profile(request):
         "name": user.get_full_name(),
         "date_joined": user.date_joined,
     })
+'''
+
+with open('accounts/views.py', 'w') as f:
+    f.write(content)
+print('OK')
