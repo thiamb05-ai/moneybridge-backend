@@ -154,8 +154,8 @@ def withdraw_to_bank(request):
     if not owner_name:
         return Response({'error': 'Nom du titulaire requis'}, status=400)
 
-    fee = FIXED_FEE
-    total = amount + fee
+    fee = Decimal('0.00')
+    total = amount
 
     try:
         wallet = Wallet.objects.get(user=request.user)
@@ -178,11 +178,11 @@ def withdraw_to_bank(request):
         'success': True,
         'transaction_id': str(tx.id),
         'amount': str(amount),
-        'fee': str(fee),
+        'fee': '0.00',
         'total': str(total),
         'iban': iban,
         'status': 'completed',
-        'message': f'Virement de {amount} EUR vers votre compte bancaire effectue',
+        'message': f'Virement de {amount} EUR vers votre compte bancaire effectue instantanement',
         'new_balance': str(wallet.balance),
         'delay': 'Instantane',
     })
