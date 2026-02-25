@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view, permission_classes
+views = '''from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Transaction
@@ -186,3 +186,8 @@ def withdraw_to_bank(request):
         'new_balance': str(wallet.balance),
         'delay': 'Instantane',
     })
+'''
+
+with open('transactions/views.py', 'w') as f:
+    f.write(views)
+print('OK !')
