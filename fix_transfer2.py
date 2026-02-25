@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view, permission_classes
+views = '''from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Transaction
@@ -91,7 +91,7 @@ def send_money(request):
         'recipient': recipient_name,
         'method': method,
         'status': 'completed',
-        'message': f'Transfert de {amount}€ envoye a {recipient_name} via {method.upper()}',
+        'message': f'Transfert de {amount}â‚¬ envoye a {recipient_name} via {method.upper()}',
         'new_balance': str(wallet.balance),
     })
 
@@ -122,7 +122,7 @@ def receive_money(request):
         'transaction_id': str(tx.id),
         'amount': str(amount),
         'new_balance': str(wallet.balance),
-        'message': f'{amount}€ recu de {sender_name}',
+        'message': f'{amount}â‚¬ recu de {sender_name}',
     })
 
 @api_view(["POST"])
@@ -171,7 +171,28 @@ def withdraw_to_bank(request):
         'total': str(round(total, 2)),
         'iban': iban,
         'status': 'completed',
-        'message': f'Virement de {amount}€ vers votre compte bancaire initie',
+        'message': f'Virement de {amount}â‚¬ vers votre compte bancaire initie',
         'new_balance': str(wallet.balance),
         'delay': '1-3 jours ouvrables',
     })
+'''
+
+with open('transactions/views.py', 'w') as f:
+    f.write(views)
+print('views.py OK')
+
+urls = '''from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.list_transactions, name='list_transactions'),
+    path('create/', views.send_money, name='send_money'),
+    path('receive/', views.receive_money, name='receive_money'),
+    path('withdraw/', views.withdraw_to_bank, name='withdraw'),
+    path('fee/', views.calculate_fee, name='calculate_fee'),
+]
+'''
+
+with open('transactions/urls.py', 'w') as f:
+    f.write(urls)
+print('urls.py OK')
